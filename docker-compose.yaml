@@ -49,7 +49,8 @@ x-airflow-common:
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    WEATHER_API_KEY: "444da07e3e2c8339f831975404d9b6e0"
+    AIRFLOW_CONN_WEATHER_API_CONN: http://api.weatherstack.com
+    WEATHER_API_KEY: 444da07e3e2c8339f831975404d9b6e0
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs

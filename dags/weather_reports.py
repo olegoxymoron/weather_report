@@ -3,6 +3,7 @@ import os
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+from airflow.providers.http.sensors.http import HttpSensor
 import pandas
 import pendulum
 import requests
@@ -43,7 +44,7 @@ city_queries = {
 
 default_args = {
     "owner": "airflow",
-    "start_date": datetime(2021, 3, 29, tzinfo=local_tz),
+    "start_date": datetime(2021, 3, 28, tzinfo=local_tz),
     "retries": 10,
     "retry_delay": timedelta(minutes=5)
 }
@@ -71,6 +72,16 @@ def create_report(**context):
 
 with DAG(dag_id="weather_data_pipeline", schedule_interval="0 12 * * *", default_args=default_args, catchup=False) as dag:
     
+    is_weather_api_available = HttpSensor(
+        task_id="is_weather_api_available",
+        method="GET",
+        http_conn_id="weather_api_conn",
+        endpoint="current?access_key={}&query=Kiev".format(key),
+        response_check=lambda response: "request" in response.json(),
+        poke_interval=5,
+        timeout=20
+    )
+
     _create_report = PythonOperator(
         task_id="create_report",
         python_callable=create_report,
@@ -87,5 +98,7 @@ with DAG(dag_id="weather_data_pipeline", schedule_interval="0 12 * * *", default
             python_callable=get_weather,
             dag=dag
         )
+
+        is_weather_api_available >> _get_weather
 
         _get_weather >> _create_report
